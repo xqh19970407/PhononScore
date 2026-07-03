@@ -127,7 +127,7 @@ To measure the fastest single-GPU inference throughput for a CIF directory, run:
 python scripts/benchmark_1000_cifs.py \
   --input path/to/cif_directory \
   --gpu 0 \
-  --batch-sizes 1,2,4,8,16,32,64,128,256 \
+  --batch-sizes 16,32,64,128,256 \
   --max-cifs 1000
 ```
 
