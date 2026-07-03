@@ -11,6 +11,38 @@ This repository contains a first local release package with:
 - A CIF-folder scoring script for GPU/CPU direct inference without LMDB.
 - Example CIF files and a CPU smoke test.
 
+## Dataset
+
+The split manifests and corresponding CIF files used for the PhononScore experiments are archived on Zenodo:
+
+```text
+https://zenodo.org/records/21157982
+```
+
+The Zenodo archive contains `phonon_scoring_json_cif_bundle_seed20260605_allgen.zip`, which bundles the four main
+`seed20260605` data splits used in this work:
+
+| Split | Records | Description |
+| --- | ---: | --- |
+| `pretrain` | 133,389 | MatterSim phonon labels from generated crystal candidates and MP40 structures. |
+| `dft_posttrain` | 8,221 | DFT-PBE phonon labels used to post-train PhononScore into PhononScore-DFT. |
+| `test_mp20_8models` | 8,000 | Held-out generated structures from eight MP20 crystal generation models. |
+| `test_dft_pbe_balanced` | 1,000 | Balanced DFT-PBE held-out test set with 500 stable and 500 unstable structures. |
+
+Each split directory contains the original JSON manifest, a `cifs/` folder with the copied CIF files, and a
+`local_manifest.json` file whose `cif_path` points to the local copied CIF. The original source path is preserved
+as `original_cif_path`.
+
+This dataset archive is intended for reproducing the training/test splits and evaluation analyses. It is not
+required for the quick-start inference example below, because this repository already includes model checkpoints
+and a small set of example CIF files.
+
+After downloading the archive, it can be unpacked with:
+
+```bash
+unzip phonon_scoring_json_cif_bundle_seed20260605_allgen.zip
+```
+
 ## Repository Layout
 
 ```text
