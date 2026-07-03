@@ -4,6 +4,8 @@ PhononScore is a phonon-aware scoring function for fast dynamical-stability rank
 It takes CIF structures as input and returns a continuous score for candidate-pool reranking before expensive
 phonon calculations.
 
+![PhononScore overview](figures/FIG-MAIN.png)
+
 This repository contains a first local release package with:
 
 - `PhononScore`: pretrained on MatterSim phonon labels from generated structures and MP40 structures.
