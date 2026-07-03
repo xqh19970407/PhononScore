@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+title: "PhononScore"
+message: "If you use PhononScore, please cite the associated PhononBench and InvDesFlow works."
+authors:
+  - family-names: Han
+    given-names: Xiao-Qi
+  - family-names: Guo
+    given-names: Peng-Jie
+  - family-names: Gao
+    given-names: Ze-Feng
+  - family-names: Lu
+    given-names: Zhong-Yi
+repository-code: "https://github.com/xqh19970407/PhononScore"
+license: MIT
