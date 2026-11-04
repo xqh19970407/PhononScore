@@ -10,7 +10,7 @@ Means, population variances and standard deviations are in the workbook and in
 [fixed_scoring.json](../configs/fixed_scoring.json); JSON retains full numerical precision.
 
 The portable CIF archive is named `PhononScore_data_splits_20261104.zip`.
-Its archival download URL is pending the authors' link. It contains the same workbook,
+[Download the complete ZIP](https://media.githubusercontent.com/media/xqh19970407/PhononScore/main/data/PhononScore_data_splits_20261104.zip) (140.9 MiB; Git LFS). It contains the same workbook,
 all five dataset manifests, raw labels, frozen IDs and all 150,610 referenced CIFs.
 
 ## CIFs and minimum-frequency labels
@@ -27,3 +27,14 @@ different subsets identify different structures; use `record_id` when joining su
 Pretraining and MP20 labels come from MatterSim; DFT post-training and DFT-test labels
 come from DFT-PBE phonon calculations. Original frequencies are retained; regression
 target clipping is applied by the training loss rather than to the archived labels.
+
+## Download verification
+
+SHA256 of the complete ZIP:
+
+```text
+848f9a916bb75fff4e2911045e6d82c55c6765fd003758b2884602a58f0350ee
+```
+
+Use the direct dataset link above or `git lfs pull` to obtain the binary ZIP.
+The Git history stores an LFS pointer for this file.

@@ -77,14 +77,34 @@ an overlap audit. The portable dataset release is named
 `PhononScore_data_splits_20261104.zip`; its accompanying workbook is
 `PhononScore_split_ids_20261104.xlsx`. These provide record IDs, CIF IDs, split roles,
 labels and relative paths. The [split workbook](data/PhononScore_split_ids_20261104.xlsx) is included here.
-The revised CIF ZIP download URL will be added when the authors provide the archival link.
-Alex20 is outside this release.
+The [complete CIF dataset ZIP](https://media.githubusercontent.com/media/xqh19970407/PhononScore/main/data/PhononScore_data_splits_20261104.zip) is hosted with Git LFS (140.9 MiB),
+including all 150,610 structures, minimum-frequency labels, manifests, split IDs and the workbook.
+The released training pools retain the exact records used for the paper checkpoints.
 
 The earlier source-pool archive remains available at
 [Zenodo record 21157982](https://zenodo.org/records/21157982).
 That historical archive predates the revised 1,600/6,400 split and should be used
 with the new ID assignments, not as an already updated validation/test package.
 See [Data splits](docs/DATA_SPLITS.md).
+
+Download the complete dataset directly (no Git LFS client is needed for this link):
+
+```bash
+curl -L --fail -o PhononScore_data_splits_20261104.zip \
+  https://media.githubusercontent.com/media/xqh19970407/PhononScore/main/data/PhononScore_data_splits_20261104.zip
+unzip PhononScore_data_splits_20261104.zip
+```
+
+Alternatively, from a Git checkout:
+
+```bash
+git lfs install
+git lfs pull --include="data/PhononScore_data_splits_20261104.zip"
+```
+
+The archive checksum is in
+[`data/PhononScore_data_splits_20261104.zip.sha256`](data/PhononScore_data_splits_20261104.zip.sha256).
+
 
 ## Training
 

@@ -10,8 +10,8 @@ checkpoint-specific training normalization, and single-CIF fixed scoring.
 - `configs/fixed_scoring.json` records means, population variances/stds and checkpoint hashes.
 - Single-CIF and multi-CIF inputs use the same frozen score definition.
 - `tests/test_scoring.py` checks recorded paper predictions and pool invariance.
-- The split workbook is included under `data/`; the full CIF ZIP is prepared
-  separately for archival upload, with its URL pending the author's supplied link.
+- The split workbook and full CIF ZIP are available under `data/`; the ZIP uses
+  Git LFS and has a dedicated download link and SHA256 checksum.
 
 The inference revision changes standardized scores from the initial public version,
 which normalized within the query pool with alpha=0.25, beta=2.0. Current defaults

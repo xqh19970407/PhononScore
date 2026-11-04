@@ -1,7 +1,7 @@
 # Frozen data assignments
 
 The updated data package contains 150,610 unique `record_id` values and CIF files.
-Alex20 is not included.
+The five cohorts below are packaged with their exact frozen assignments.
 
 | Subset | Records | Role |
 | --- | ---: | --- |
@@ -54,6 +54,8 @@ ordered ID lists in `splits/*_internal_ids.json`; it does not resample them.
 The smaller metadata ZIP contains the workbook, manifests and assignments but
 intentionally omits CIF contents. The full dataset includes all referenced CIFs.
 
-The data-archive URL will be filled in after the authors upload the prepared ZIP.
-No new download URL is invented here. Existing source data:
-https://zenodo.org/records/21157982.
+The [complete CIF ZIP](https://media.githubusercontent.com/media/xqh19970407/PhononScore/main/data/PhononScore_data_splits_20261104.zip) is hosted in this repository through Git LFS.
+It is 147,734,453 bytes and has SHA256 `848f9a916bb75fff4e2911045e6d82c55c6765fd003758b2884602a58f0350ee`.
+The [split workbook](../data/PhononScore_split_ids_20261104.xlsx) is also available separately.
+
+Earlier source-pool data: https://zenodo.org/records/21157982.
