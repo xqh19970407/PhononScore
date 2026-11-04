@@ -1,0 +1,39 @@
+{
+  "paper_revision": "validation_resplit_fixedstats_a0p2_b0p5_20261103",
+  "fixed_scoring_config": "configs/fixed_scoring.json",
+  "fixed_scoring_sha256": "338c4176082aa85733a6f2b89d3afc7915d4ef00370e7913da98c3e804a57b46",
+  "evaluation_weights": {
+    "alpha": 0.2,
+    "beta": 0.5
+  },
+  "training_internal_weights": {
+    "alpha": 0.1,
+    "beta": 0.6
+  },
+  "standardization": "Use the checkpoint-specific gradient-training mean and population standard deviation; divide by sqrt(population variance), ddof=0. No evaluated-pool fitting.",
+  "reference_training_records": {
+    "phononscore_pretrain": 126719,
+    "phononscore_dft": 7809
+  },
+  "weight_selection": {
+    "dataset": "validation_mp20",
+    "records": 1600,
+    "per_source": 200,
+    "top_k_per_source": 25,
+    "selected_validation_stable_fraction": 0.81
+  },
+  "test_records": {
+    "mp20": 6400,
+    "dft_pbe": 1000
+  },
+  "recorded_paper_top100_stable_fraction": {
+    "mp20_phononscore": 0.7875,
+    "dft_pretrained": 0.85,
+    "dft_posttrained": 0.92
+  },
+  "alex20_included": false,
+  "checkpoint_sha256": {
+    "phononscore_pretrain": "79b027c7037184786d6913783d3d82b081aee16f4762612184767e5ca58c0b0f",
+    "phononscore_dft": "3c0a3b3d16cba54af82ea3dd1eea184a5b70042b05c71830685964e067956404"
+  }
+}

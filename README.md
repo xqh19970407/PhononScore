@@ -49,6 +49,12 @@ The same checkpoint/reference supports comparison across candidate pools; scores
 from different checkpoints are not jointly probability-calibrated.
 See [Scoring formula](docs/SCORING_FORMULA.md) for the exact constants and custom-model usage.
 
+The defaults exactly reproduce the current paper evaluation: MP20 mean Top100
+stable rate 78.75%, DFT-PBE pretrained Top100 85%, and DFT-posttrained Top100 92%.
+The selected weights give 81.0% mean Top25/200 stability on the 1,600-record MP20
+validation set. The exact evaluation specification and checkpoint hashes are
+recorded in [`configs/paper_evaluation.json`](configs/paper_evaluation.json).
+
 ## Data and frozen splits
 
 The paper evaluation uses 200 MP20 validation and 800 test candidates per generator:
