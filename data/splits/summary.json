@@ -1,0 +1,46 @@
+{
+  "version": "20261104",
+  "cohort_counts": {
+    "pretrain": 133389,
+    "dft_posttrain": 8221,
+    "validation_mp20": 1600,
+    "test_mp20": 6400,
+    "test_dft_pbe": 1000
+  },
+  "role_counts": {
+    "pretrain": {
+      "gradient_train": 126719,
+      "checkpoint_validation": 6669,
+      "unused_rounding": 1
+    },
+    "dft_posttrain": {
+      "gradient_train": 7809,
+      "checkpoint_validation": 411,
+      "unused_rounding": 1
+    },
+    "validation_mp20": {
+      "score_validation": 1600
+    },
+    "test_mp20": {
+      "external_test": 6400
+    },
+    "test_dft_pbe": {
+      "external_test": 1000
+    }
+  },
+  "records_total": 150610,
+  "cifs_total": 150610,
+  "score_validation_records": 1600,
+  "external_test_records": 7400,
+  "mp20_validation_per_source": 200,
+  "mp20_test_per_source": 800,
+  "score_weights": {
+    "alpha": 0.2,
+    "beta": 0.5
+  },
+  "internal_test_note": "Legacy id_test equals internal checkpoint-validation IDs. It is not an independent test set or a paper benchmark.",
+  "rounding_note": "One record in each training pool was unused because both original train and val counts were rounded down.",
+  "checkpoint_validation_note": "Original internal model split is structure-based; formula separation applies to the complete training pools versus score validation/external tests.",
+  "training_reference_note": "Means and population variances/stds use only gradient_train rows, separately for each checkpoint.",
+  "alex20_included": false
+}

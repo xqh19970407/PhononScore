@@ -6,6 +6,12 @@ __pycache__/
 outputs/
 tmp/
 *.log
+artifacts/
+*.lmdb
+data.mdb
+lock.mdb
+examples/*_scores*.csv
+examples/*_scores*.txt
 examples/*scores*.csv
 examples/*scores*.txt
 examples/single_cif_score.csv

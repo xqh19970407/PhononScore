@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "scoring_version": "fixed_training_stats_20261103",
+  "alpha": 0.2,
+  "beta": 0.5,
+  "normalization": "fixed_gradient_training_outputs",
+  "ddof": 0,
+  "model_scope": "Scores are pool-invariant for a fixed checkpoint/configuration. Values from different checkpoints are not probability-calibrated to one another.",
+  "models": {
+    "phononscore_pretrain": {
+      "training_stage": "pretrain",
+      "n_train": 126719,
+      "checkpoint_sha256": "79b027c7037184786d6913783d3d82b081aee16f4762612184767e5ca58c0b0f",
+      "components": {
+        "prediction": {
+          "mean": -0.904731979918483,
+          "std": 1.3546246148056573,
+          "variance": 1.8350078470373756
+        },
+        "threshold_score": {
+          "mean": 0.4711430725258739,
+          "std": 0.3816066407036717,
+          "variance": 0.14562362822914118
+        },
+        "pair_geometry_score": {
+          "mean": -0.5426783724441633,
+          "std": 1.1582563868228783,
+          "variance": 1.3415578576159892
+        }
+      }
+    },
+    "phononscore_dft": {
+      "training_stage": "dft_posttrain",
+      "n_train": 7809,
+      "checkpoint_sha256": "3c0a3b3d16cba54af82ea3dd1eea184a5b70042b05c71830685964e067956404",
+      "components": {
+        "prediction": {
+          "mean": -0.20594662158834373,
+          "std": 0.6500519788745432,
+          "variance": 0.4225675752387096
+        },
+        "threshold_score": {
+          "mean": 0.7150065222772929,
+          "std": 0.3066766091057845,
+          "variance": 0.09405054257262212
+        },
+        "pair_geometry_score": {
+          "mean": -0.33817445619729863,
+          "std": 0.45687364722543333,
+          "variance": 0.2087335295290697
+        }
+      }
+    }
+  }
+}

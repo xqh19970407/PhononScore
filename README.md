@@ -1,180 +1,120 @@
 # PhononScore
 
-PhononScore is a phonon-aware scoring function for fast dynamical-stability ranking of crystalline materials.
-It takes CIF structures as input and returns a continuous score for candidate-pool reranking before expensive
-phonon calculations.
+PhononScore ranks crystalline structures by dynamical stability directly from CIF files.
+Two checkpoints are included: **PhononScore**, pretrained on MatterSim phonon labels,
+and **PhononScore-DFT**, post-trained on DFT-PBE phonon labels.
 
 ![PhononScore overview](figures/FIG-MAIN.png)
 
-This repository contains a first local release package with:
+This release includes the model and loss functions, both checkpoints, the actual
+training loop and LMDB builder, frozen split IDs, CIF inference, and evaluation utilities.
 
-- `PhononScore`: pretrained on MatterSim phonon labels from generated structures and MP40 structures.
-- `PhononScore-DFT`: initialized from PhononScore and post-trained on DFT-PBE phonon labels.
-- A CIF-folder scoring script for GPU/CPU direct inference without LMDB.
-- Example CIF files and a CPU smoke test.
-
-## Dataset
-
-The split manifests and corresponding CIF files used for the PhononScore experiments are archived on Zenodo:
-
-```text
-https://zenodo.org/records/21157982
-```
-
-The Zenodo archive contains `phonon_scoring_json_cif_bundle_seed20260605_allgen.zip`, which bundles the four main
-`seed20260605` data splits used in this work:
-
-| Split | Records | Description |
-| --- | ---: | --- |
-| `pretrain` | 133,389 | MatterSim phonon labels from generated crystal candidates and MP40 structures. |
-| `dft_posttrain` | 8,221 | DFT-PBE phonon labels used to post-train PhononScore into PhononScore-DFT. |
-| `test_mp20_8models` | 8,000 | Held-out generated structures from eight MP20 crystal generation models. |
-| `test_dft_pbe_balanced` | 1,000 | Balanced DFT-PBE held-out test set with 500 stable and 500 unstable structures. |
-
-Each split directory contains the original JSON manifest, a `cifs/` folder with the copied CIF files, and a
-`local_manifest.json` file whose `cif_path` points to the local copied CIF. The original source path is preserved
-as `original_cif_path`.
-
-This dataset archive is intended for reproducing the training/test splits and evaluation analyses. It is not
-required for the quick-start inference example below, because this repository already includes model checkpoints
-and a small set of example CIF files.
-
-After downloading the archive, it can be unpacked with:
-
-```bash
-unzip phonon_scoring_json_cif_bundle_seed20260605_allgen.zip
-```
-
-## Repository Layout
-
-```text
-phononscore/
-  models/                  # ALIGNN + periodic geometry-likelihood model definition
-  inference/score_cifs.py  # user-facing CIF scoring entry point
-third_party/alignn-main/   # bundled ALIGNN source used by the current model
-checkpoints/
-  phononscore_pretrain/
-  phononscore_dft/
-configs/config_min_phonon.json
-examples/cifs/
-scripts/smoke_test.sh
-```
-
-## Environment
-
-The recommended environment file uses the full dependency stack exported from the working `my_alignn` conda
-environment used to train, evaluate, and smoke-test the released checkpoints. For the public release, the
-environment is named `phononscore`.
-
-Create the release environment on a fresh machine:
+## Installation
 
 ```bash
 conda env create -f environment.yml
 conda activate phononscore
 ```
 
-For provenance, the raw export from the local development machine is saved as
-`docs/environment-my_alignn-raw.yml`; the public `environment.yml` removes the machine-specific `prefix` and
-renames the environment to `phononscore`.
+The bundled ALIGNN source retains its original license. The exported working
+environment is documented in `docs/environment-my_alignn-raw.yml`.
 
-## Quick Start
-
-Run a CPU smoke test:
+## Score a CIF or a directory
 
 ```bash
+python -m phononscore.inference.score_cifs \
+  --input examples/cifs --out outputs/scores.csv \
+  --model phononscore_dft --device cuda --batch-size 32
+```
+
+`--input` also accepts a single CIF. If CUDA is unavailable, inference falls back to CPU.
+The CSV contains raw outputs, their normalized components, and `standardized_score`;
+a companion TXT records timing, the checkpoint hash, and the exact reference moments.
+Higher scores prioritize candidates for explicit phonon validation.
+
+The current paper score is
+
+```text
+z(prediction) + 0.5 * z(threshold_score) + 0.2 * z(pair_geometry_score)
+z(x) = (x - training_mean) / training_std
+training_std = sqrt(training_population_variance)
+```
+
+Means and population variances are computed once from each checkpoint's actual
+gradient-training predictions: 126,719 records for PhononScore and 7,809 for
+PhononScore-DFT. The constants in [`configs/fixed_scoring.json`](configs/fixed_scoring.json)
+are frozen for all validation, test and query inputs. A single structure therefore
+has a defined score, independent of the other structures submitted with it.
+The same checkpoint/reference supports comparison across candidate pools; scores
+from different checkpoints are not jointly probability-calibrated.
+See [Scoring formula](docs/SCORING_FORMULA.md) for the exact constants and custom-model usage.
+
+## Data and frozen splits
+
+The paper evaluation uses 200 MP20 validation and 800 test candidates per generator:
+1,600 structures for fusion-weight selection and 6,400 for testing across eight sources.
+A separate balanced DFT-PBE test contains 1,000 structures. No DFT test tuning is performed.
+
+| Cohort | Pool | Actual gradient training | Internal checkpoint validation |
+| --- | ---: | ---: | ---: |
+| MatterSim pretraining | 133,389 | 126,719 | 6,669 |
+| DFT post-training | 8,221 | 7,809 | 411 |
+
+One record per training pool was unused by the original rounded split counts.
+Internal checkpoint validation and MP20 score-weight validation have different roles.
+The legacy trainer's internal `id_test` mirrors `id_val`; it is not an independent paper test.
+Formula separation applies between the complete training pools, score-weight validation,
+and external benchmark tests. The internal checkpoint split is structure-based.
+
+[`data/splits`](data/splits) contains frozen internal ID lists, benchmark IDs, counts and
+an overlap audit. The portable dataset release is named
+`PhononScore_data_splits_20261104.zip`; its accompanying workbook is
+`PhononScore_split_ids_20261104.xlsx`. These provide record IDs, CIF IDs, split roles,
+labels and relative paths. The [split workbook](data/PhononScore_split_ids_20261104.xlsx) is included here.
+The revised CIF ZIP download URL will be added when the authors provide the archival link.
+Alex20 is outside this release.
+
+The earlier source-pool archive remains available at
+[Zenodo record 21157982](https://zenodo.org/records/21157982).
+That historical archive predates the revised 1,600/6,400 split and should be used
+with the new ID assignments, not as an already updated validation/test package.
+See [Data splits](docs/DATA_SPLITS.md).
+
+## Training
+
+After downloading and unpacking the revised portable data:
+
+```bash
+bash scripts/train_model.sh pretrain /path/phononscore_data_20261104 outputs/pretrain
+PRETRAIN_CKPT=outputs/pretrain/best_model.pt \
+  bash scripts/train_model.sh dft_posttrain /path/phononscore_data_20261104 outputs/dft
+```
+
+The wrapper builds graph caches using the frozen IDs, then runs the released paper
+trainer with the original hyperparameters. See [Training](docs/TRAINING.md) for
+commands, objectives, checkpoint selection and training-statistics extraction.
+
+## Verification and throughput
+
+```bash
+python -m unittest discover -s tests -v
 bash scripts/smoke_test.sh
+python scripts/benchmark_1000_cifs.py --input path/to/cifs --gpu 0 --batch-sizes 16,32,64,128
 ```
 
-Score a folder of CIF files with GPU inference:
+The benchmark measures throughput. Scientific Top-K metrics can be computed with
+`scripts/evaluate_benchmark.py` using a released test manifest and inference CSV.
 
-```bash
-python -m phononscore.inference.score_cifs \
-  --input path/to/cif_directory \
-  --out results/phononscore_dft_scores.csv \
-  --model phononscore_dft \
-  --device cuda \
-  --batch-size 32
-```
+## Output columns
 
-This writes two files:
+`prediction`, `threshold_score`, and `pair_geometry_score` are the three raw heads;
+`*_z` columns use the frozen training reference. `standardized_score` is the final
+paper ranking score. `final_score` retains the checkpoint's internal training-time
+combination (`prediction + 0.6*threshold_score + 0.1*pair_geometry_score`).
+Path and formula columns retain CIF traceability.
 
-```text
-results/phononscore_dft_scores.csv
-results/phononscore_dft_scores.txt
-```
+## License and intended use
 
-The CSV contains all per-structure scores sorted by `standardized_score`. The TXT file records the model,
-actual device, batch size, number of scored/failed CIFs, timing, throughput, and the top-ranked structures.
-If CUDA is requested but no GPU is available, the script automatically falls back to CPU and records the actual
-device in the TXT summary.
-
-Use the MatterSim-pretrained model:
-
-```bash
-python -m phononscore.inference.score_cifs \
-  --input examples/cifs \
-  --out examples/example_scores_pretrain.csv \
-  --model phononscore_pretrain \
-  --device cuda \
-  --batch-size 32
-```
-
-## Benchmark 1000 CIFs on One GPU
-
-To measure the fastest single-GPU inference throughput for a CIF directory, run:
-
-```bash
-python scripts/benchmark_1000_cifs.py \
-  --input path/to/cif_directory \
-  --gpu 0 \
-  --batch-sizes 16,32,64,128,256 \
-  --max-cifs 1000
-```
-
-The benchmark exposes only one GPU through `CUDA_VISIBLE_DEVICES`, tests the requested batch sizes in order,
-and stops at the first CUDA out-of-memory error by default. Each batch-size run writes its own `scores.csv`,
-`scores.txt`, and `run.log`; the benchmark also writes:
-
-```text
-outputs/benchmark_1000_cifs/<model>_<timestamp>/benchmark_results.csv
-outputs/benchmark_1000_cifs/<model>_<timestamp>/benchmark_summary.txt
-```
-
-Use `--allow-cpu` only for checking that the benchmark script itself works on a CPU-only machine.
-
-## Output Columns
-
-```text
-id,cif_path,cif_name,cif_stem,resolved_cif_path,resolved_cif_name,resolved_cif_stem,formula,n_atoms,prediction,threshold_score,pair_geometry_score,final_score,standardized_score
-```
-
-- `id`: input CIF stem used for sorting/reporting.
-- `cif_path`, `cif_name`, `cif_stem`: path/name/stem of the file passed to the scorer.
-- `resolved_cif_path`, `resolved_cif_name`, `resolved_cif_stem`: symlink-resolved source CIF path/name/stem. These columns help trace benchmark subset files back to the user's original materials.
-- `prediction`: minimum-phonon-frequency regression head.
-- `threshold_score`: mean probability from the multi-threshold stability head.
-- `pair_geometry_score`: periodic local geometry log-likelihood from the MDN geometry branch.
-- `final_score`: raw checkpoint score, using the training-time internal weights.
-- `standardized_score`: candidate-pool reranking score after z-score normalization.
-
-For a candidate pool, the default paper-style reranking score is:
-
-```text
-standardized_score =
-    z(prediction)
-  + 2.0 * z(threshold_score)
-  + 0.25 * z(pair_geometry_score)
-```
-
-For a single CIF, `standardized_score` is reported as `NA`, because z-score calibration requires a pool.
-
-## Model Notes
-
-PhononScore is a ranking model, not a replacement for explicit phonon calculations. It is intended to enrich
-dynamically stable structures in the top-ranked part of a candidate pool. Final candidates should still be
-validated by MatterSim/PhononBench or DFT phonon calculations.
-
-## License
-
-The PhononScore release code is MIT licensed. The bundled ALIGNN source under `third_party/alignn-main` retains
-its original license; see `third_party/alignn-main/LICENSE.rst`.
+The PhononScore code is MIT licensed; bundled ALIGNN retains its own license.
+The models provide ranking signals for screening. Explicit phonon calculations
+remain the reference for assessing an individual material's dynamical stability.

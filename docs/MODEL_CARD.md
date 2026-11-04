@@ -38,6 +38,7 @@ the original local environment name and prefix is kept in `docs/environment-my_a
 ## Limitations
 
 - The score is a ranking score, not a certified minimum phonon frequency.
-- Standardized scores require a candidate pool.
+- Standardized scores use frozen checkpoint-specific training moments and are defined for a single CIF.
+- Values from different checkpoints are not jointly probability-calibrated.
 - Materials outside the training distribution should be validated with explicit phonon calculations.
 - Structures that fail CIF parsing or ALIGNN graph construction cannot be scored.

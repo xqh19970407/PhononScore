@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """Score CIF files with PhononScore or PhononScore-DFT checkpoints.
 
-The script is designed for candidate-pool reranking. For a pool of CIF files,
-it writes the raw model outputs and, when at least two structures are present,
-a standardized score:
+The script writes raw model outputs and a standardized score for every CIF,
+using the frozen training-output moments of the selected checkpoint:
 
     standardized_score =
         z(prediction) + beta_eval * z(threshold_score)
         + alpha_eval * z(pair_geometry_score)
 
-The default paper-style weights are alpha_eval=0.25 and beta_eval=2.0.
+The default paper weights are alpha_eval=0.2 and beta_eval=0.5. A structure's
+score is independent of the other structures submitted with it.
 """
 
 from __future__ import annotations
@@ -59,17 +59,6 @@ def parse_thresholds(values: Any) -> tuple[float, ...]:
     if isinstance(values, str):
         return tuple(float(x.strip()) for x in values.split(",") if x.strip())
     return tuple(float(x) for x in values)
-
-
-def zscore(values: list[float]) -> list[float] | None:
-    if len(values) < 2:
-        return None
-    mean = sum(values) / len(values)
-    var = sum((x - mean) ** 2 for x in values) / len(values)
-    std = var ** 0.5
-    if std <= 0:
-        std = 1.0
-    return [(x - mean) / std for x in values]
 
 
 def build_graph_from_cif(cif_path: Path, config: Any):
@@ -185,16 +174,41 @@ def iter_chunks(items: list[Any], chunk_size: int):
         yield items[start : start + chunk_size]
 
 
-def add_standardized_scores(rows: list[dict[str, Any]], *, alpha_eval: float, beta_eval: float) -> None:
-    pred_z = zscore([float(row["prediction"]) for row in rows])
-    thr_z = zscore([float(row["threshold_score"]) for row in rows])
-    geom_z = zscore([float(row["pair_geometry_score"]) for row in rows])
-    if pred_z is None or thr_z is None or geom_z is None:
-        for row in rows:
-            row["standardized_score"] = "NA"
-        return
-    for row, zp, zt, zg in zip(rows, pred_z, thr_z, geom_z):
-        row["standardized_score"] = float(zp + beta_eval * zt + alpha_eval * zg)
+def add_standardized_scores(
+    rows: list[dict[str, Any]], *, model_name: str,
+    alpha_eval: float, beta_eval: float, scoring_config: dict[str, Any],
+) -> None:
+    from phononscore.scoring import add_fixed_scores
+
+    add_fixed_scores(rows, model_name=model_name, config=scoring_config,
+                     alpha=alpha_eval, beta=beta_eval)
+
+
+def build_progress_message(
+    *,
+    stage: str,
+    processed: int,
+    total: int,
+    success_count: int,
+    failure_count: int,
+    elapsed_seconds: float,
+    recent_ok: list[str] | None = None,
+    recent_fail: list[str] | None = None,
+) -> str:
+    attempted = success_count + failure_count
+    success_rate = (100.0 * success_count / attempted) if attempted > 0 else 0.0
+    parts = [
+        f"[{stage}] {processed}/{total}",
+        f"ok={success_count}",
+        f"failed={failure_count}",
+        f"success={success_rate:.1f}%",
+        f"elapsed={elapsed_seconds:.1f}s",
+    ]
+    if recent_ok:
+        parts.append(f"recent_ok={','.join(recent_ok)}")
+    if recent_fail:
+        parts.append(f"recent_fail={','.join(recent_fail)}")
+    return " | ".join(parts)
 
 
 def write_scores(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -213,6 +227,9 @@ def write_scores(path: Path, rows: list[dict[str, Any]]) -> None:
         "pair_geometry_score",
         "final_score",
         "standardized_score",
+        "prediction_z",
+        "threshold_score_z",
+        "pair_geometry_score_z",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -239,6 +256,8 @@ def write_summary(
     build_seconds: float,
     inference_seconds: float,
     total_seconds: float,
+    scoring_config: dict[str, Any],
+    checkpoint_sha256: str,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     throughput = len(rows) / total_seconds if total_seconds > 0 else 0.0
@@ -268,6 +287,14 @@ def write_summary(
         f.write("standardized_score = z(prediction)\n")
         f.write(f"                   + {beta_eval:g} * z(threshold_score)\n")
         f.write(f"                   + {alpha_eval:g} * z(pair_geometry_score)\n\n")
+        reference = scoring_config["models"][model_name]
+        f.write("Normalization: fixed gradient-training-output moments (ddof=0)\n")
+        f.write(f"Reference training records: {reference['n_train']}\n")
+        f.write(f"Checkpoint SHA256: {checkpoint_sha256}\n")
+        for key, stats in reference["components"].items():
+            f.write(f"{key}: mean={stats['mean']:.17g}, std={stats['std']:.17g}, "
+                    f"variance={stats['variance']:.17g}\n")
+        f.write("\n")
         f.write("Top ranked structures\n")
         f.write("---------------------\n")
         if top_rows:
@@ -316,8 +343,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--device", default="cuda", help="cuda or cpu.")
     parser.add_argument("--batch-size", type=int, default=32, help="Number of CIF graphs per GPU/CPU forward pass.")
-    parser.add_argument("--alpha-eval", type=float, default=0.25, help="Weight for z(pair_geometry_score).")
-    parser.add_argument("--beta-eval", type=float, default=2.0, help="Weight for z(threshold_score).")
+    parser.add_argument("--alpha-eval", type=float, default=None, help="Geometry weight; defaults to the fixed config (0.2).")
+    parser.add_argument("--beta-eval", type=float, default=None, help="Threshold weight; defaults to the fixed config (0.5).")
+    parser.add_argument("--scoring-config", type=Path, default=None,
+                        help="Fixed training-reference statistics and weights; defaults to configs/fixed_scoring.json.")
     parser.add_argument(
         "--summary-out",
         type=Path,
@@ -329,6 +358,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Stop immediately if any CIF fails to parse or score.",
     )
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=100,
+        help="Emit a flushed progress log line every N CIFs during graph building and scoring.",
+    )
     return parser.parse_args()
 
 
@@ -337,6 +372,8 @@ def main() -> None:
     args = parse_args()
     if args.batch_size <= 0:
         raise ValueError("--batch-size must be positive")
+    if args.progress_every <= 0:
+        raise ValueError("--progress-every must be positive")
     os.environ.setdefault("MPLCONFIGDIR", "/tmp/phononscore-mplconfig")
     repo_root = Path(__file__).resolve().parents[2]
     add_local_paths(repo_root)
@@ -348,6 +385,13 @@ def main() -> None:
         model_config = args.model_config
     alignn_config = args.alignn_config or (repo_root / "configs" / "config_min_phonon.json")
 
+    from phononscore.scoring import load_scoring_config, verify_checkpoint
+
+    scoring_config = load_scoring_config(args.scoring_config)
+    args.alpha_eval = float(scoring_config["alpha"] if args.alpha_eval is None else args.alpha_eval)
+    args.beta_eval = float(scoring_config["beta"] if args.beta_eval is None else args.beta_eval)
+    checkpoint_sha256 = verify_checkpoint(checkpoint, args.model, scoring_config)
+
     model, config, device = load_model(
         checkpoint=checkpoint,
         model_config_json=model_config,
@@ -358,38 +402,105 @@ def main() -> None:
     failures: list[dict[str, str]] = []
     records: list[dict[str, Any]] = []
     build_started = time.perf_counter()
-    for cif_path in cif_paths:
+    recent_build_ok: list[str] = []
+    recent_build_fail: list[str] = []
+    for index, cif_path in enumerate(cif_paths, start=1):
         try:
             records.append(build_graph_record(cif_path, config))
+            recent_build_ok.append(cif_path.name)
+            recent_build_ok = recent_build_ok[-3:]
         except Exception as exc:
             if args.strict:
                 raise
             failures.append({"id": cif_path.stem, "cif_path": str(cif_path), "error": repr(exc)})
+            recent_build_fail.append(cif_path.name)
+            recent_build_fail = recent_build_fail[-3:]
+        if index % args.progress_every == 0 or index == len(cif_paths):
+            print(
+                build_progress_message(
+                    stage="graph-build",
+                    processed=index,
+                    total=len(cif_paths),
+                    success_count=len(records),
+                    failure_count=len(failures),
+                    elapsed_seconds=time.perf_counter() - build_started,
+                    recent_ok=recent_build_ok,
+                    recent_fail=recent_build_fail,
+                ),
+                flush=True,
+            )
     build_seconds = time.perf_counter() - build_started
 
     rows: list[dict[str, Any]] = []
     inference_started = time.perf_counter()
+    score_failures_before = len(failures)
+    scored_records = 0
+    recent_score_ok: list[str] = []
+    recent_score_fail: list[str] = []
     for batch in iter_chunks(records, args.batch_size):
         try:
-            rows.extend(score_records(model, batch, device))
+            batch_rows = score_records(model, batch, device)
+            rows.extend(batch_rows)
+            scored_records += len(batch)
+            recent_score_ok.extend(row["id"] for row in batch_rows[:3])
+            recent_score_ok = recent_score_ok[-3:]
         except Exception as exc:
             if args.strict:
                 raise
             if len(batch) == 1:
                 record = batch[0]
                 failures.append({"id": record["id"], "cif_path": record["cif_path"], "error": repr(exc)})
+                scored_records += 1
+                recent_score_fail.append(record["id"])
+                recent_score_fail = recent_score_fail[-3:]
+                if scored_records % args.progress_every == 0 or scored_records == len(records):
+                    print(
+                        build_progress_message(
+                            stage="scoring",
+                            processed=scored_records,
+                            total=len(records),
+                            success_count=len(rows),
+                            failure_count=len(failures) - score_failures_before,
+                            elapsed_seconds=time.perf_counter() - inference_started,
+                            recent_ok=recent_score_ok,
+                            recent_fail=recent_score_fail,
+                        ),
+                        flush=True,
+                    )
                 continue
             for record in batch:
                 try:
-                    rows.extend(score_records(model, [record], device))
+                    single_rows = score_records(model, [record], device)
+                    rows.extend(single_rows)
+                    recent_score_ok.extend(row["id"] for row in single_rows)
+                    recent_score_ok = recent_score_ok[-3:]
                 except Exception as item_exc:
                     failures.append(
                         {"id": record["id"], "cif_path": record["cif_path"], "error": repr(item_exc)}
                     )
+                    recent_score_fail.append(record["id"])
+                    recent_score_fail = recent_score_fail[-3:]
+                finally:
+                    scored_records += 1
+        if scored_records % args.progress_every == 0 or scored_records == len(records):
+            print(
+                build_progress_message(
+                    stage="scoring",
+                    processed=scored_records,
+                    total=len(records),
+                    success_count=len(rows),
+                    failure_count=len(failures) - score_failures_before,
+                    elapsed_seconds=time.perf_counter() - inference_started,
+                    recent_ok=recent_score_ok,
+                    recent_fail=recent_score_fail,
+                ),
+                flush=True,
+            )
     inference_seconds = time.perf_counter() - inference_started
     if not rows:
         raise RuntimeError("No CIF files were successfully scored.")
-    add_standardized_scores(rows, alpha_eval=args.alpha_eval, beta_eval=args.beta_eval)
+    add_standardized_scores(rows, model_name=args.model, alpha_eval=args.alpha_eval,
+                            beta_eval=args.beta_eval, scoring_config=scoring_config)
     rows.sort(
         key=lambda row: float("-inf") if row["standardized_score"] == "NA" else float(row["standardized_score"]),
         reverse=True,
@@ -413,13 +524,13 @@ def main() -> None:
         build_seconds=build_seconds,
         inference_seconds=inference_seconds,
         total_seconds=total_seconds,
+        scoring_config=scoring_config,
+        checkpoint_sha256=checkpoint_sha256,
     )
     print(f"Scored {len(rows)} CIF files with {args.model} on {device}.")
     print(f"Failed {len(failures)} CIF files.")
     print(f"Wrote {args.out}")
     print(f"Wrote {summary_out}")
-    if len(rows) < 2:
-        print("Note: standardized_score is NA for a single CIF; use a candidate pool for z-score reranking.")
 
 
 if __name__ == "__main__":

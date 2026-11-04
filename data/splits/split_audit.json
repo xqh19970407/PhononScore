@@ -1,0 +1,20 @@
+{
+  "record_ids_unique": true,
+  "all_cifs_available": true,
+  "formula_overlap_score_validation_vs_test": 0,
+  "formula_overlap_score_validation_vs_training_pools": 0,
+  "formula_overlap_external_test_vs_training_pools": 0,
+  "internal_mirror_test_equals_validation": true,
+  "source_hashes": {
+    "pretrain": {
+      "manifest_sha256": "26c00afc87d6e3d35fa11c0904b3c884888aaef9cefef577244c9acdeb6c8520",
+      "split_ids_sha256": "c9511f4b33f5d65bb22389a4323af680a6ed0980f374bed193f1c01680a80a44"
+    },
+    "dft_posttrain": {
+      "manifest_sha256": "9c7bde2da1d5dca8a9513f4dc8f62a331e6f68eb9fd8eaf190f951696bde6f13",
+      "split_ids_sha256": "40b7f66424dc5c4ffb4ce6933d3625bfc0ecba7f9b98721fb9b388f34179b16d"
+    }
+  },
+  "pretrain_internal_train_val_formula_overlap": 1992,
+  "dft_posttrain_internal_train_val_formula_overlap": 69
+}
