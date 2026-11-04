@@ -1,14 +1,49 @@
 cff-version: 1.2.0
-title: "PhononScore"
-message: "If you use PhononScore, please cite the associated PhononBench and InvDesFlow works."
+title: "PhononScore: a phonon-aware scoring function for dynamical stability"
+message: "If you use PhononScore or its datasets, please cite PhononScore and PhononBench using the BibTeX entries in README.md."
 authors:
   - family-names: Han
     given-names: Xiao-Qi
-  - family-names: Guo
-    given-names: Peng-Jie
   - family-names: Gao
     given-names: Ze-Feng
   - family-names: Lu
     given-names: Zhong-Yi
 repository-code: "https://github.com/xqh19970407/PhononScore"
 license: MIT
+preferred-citation:
+  type: generic
+  title: "PhononScore: a phonon-aware scoring function for dynamical stability"
+  authors:
+    - family-names: Han
+      given-names: Xiao-Qi
+    - family-names: Gao
+      given-names: Ze-Feng
+    - family-names: Lu
+      given-names: Zhong-Yi
+  year: 2026
+  url: "https://arxiv.org/abs/2607.08518"
+  identifiers:
+    - type: other
+      value: "arXiv:2607.08518"
+references:
+  - type: article
+    title: "PhononBench:a large-scale phonon-based benchmark for dynamical stability in crystal generation"
+    authors:
+      - family-names: Han
+        given-names: Xiao-Qi
+      - family-names: Gao
+        given-names: Ze-Feng
+      - family-names: Li
+        given-names: Wen-Kao
+      - family-names: Guo
+        given-names: Peng-Jie
+      - family-names: Lu
+        given-names: Zhong-Yi
+    year: 2026
+    month: 9
+    journal: "AI for Science"
+    volume: "2"
+    issue: "3"
+    start: "035005"
+    doi: "10.1088/3050-287X/ae9ee4"
+    url: "https://doi.org/10.1088/3050-287X/ae9ee4"

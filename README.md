@@ -139,6 +139,36 @@ paper ranking score. `final_score` retains the checkpoint's internal training-ti
 combination (`prediction + 0.6*threshold_score + 0.1*pair_geometry_score`).
 Path and formula columns retain CIF traceability.
 
+## Citation
+
+If you use PhononScore or the released datasets, please cite the following papers:
+
+```bibtex
+@misc{PhononScore,
+      title={PhononScore: a phonon-aware scoring function for dynamical stability},
+      author={Xiao-Qi Han and Ze-Feng Gao and Zhong-Yi Lu},
+      year={2026},
+      eprint={2607.08518},
+      archivePrefix={arXiv},
+      primaryClass={cond-mat.mtrl-sci},
+      url={https://arxiv.org/abs/2607.08518},
+}
+
+@article{PhononBench,
+doi = {10.1088/3050-287X/ae9ee4},
+url = {https://doi.org/10.1088/3050-287X/ae9ee4},
+year = {2026},
+month = {sep},
+publisher = {IOP Publishing},
+volume = {2},
+number = {3},
+pages = {035005},
+author = {Han, Xiao-Qi and Gao, Ze-Feng and Li, Wen-Kao and Guo, Peng-Jie and Lu, Zhong-Yi},
+title = {PhononBench:a large-scale phonon-based benchmark for dynamical stability in crystal generation},
+journal = {AI for Science}
+}
+```
+
 ## License and intended use
 
 The PhononScore code is MIT licensed; bundled ALIGNN retains its own license.
