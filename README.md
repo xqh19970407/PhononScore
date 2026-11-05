@@ -120,6 +120,27 @@ The wrapper builds graph caches using the frozen IDs, then runs the released pap
 trainer with the original hyperparameters. See [Training](docs/TRAINING.md) for
 commands, objectives, checkpoint selection and training-statistics extraction.
 
+## Reproduce the screening figures
+
+The exact MP20 and DFT-PBE candidate pools used in the two 5% stable screening
+figures are released in [data/screening_pools_20261105](data/screening_pools_20261105).
+They include every CIF ID, label, raw and fixed-normalized PhononScore output,
+three-model ranking scores, ranks, screening flags, and the corresponding 3,700 CIFs.
+The stable targets and actual materials selected by each model are also provided
+as separate CSVs.
+
+```bash
+pip install -r requirements-screening.txt
+python scripts/reproduce_screening_pools.py \
+  --out outputs/screening_pools_20261105 \
+  --extract-cifs outputs/screening_pool_cifs
+```
+
+This recomputes AP, ROC-AUC, recall, hit counts and enrichment, exports each curve
+point and the selected material IDs, and draws both four-panel figures using the
+frozen candidate CSVs. See [Screening reproduction](docs/SCREENING_REPRODUCTION.md)
+for exact pool definitions, reference numbers and CIF inference commands.
+
 ## Verification and throughput
 
 ```bash

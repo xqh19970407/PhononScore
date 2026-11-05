@@ -28,6 +28,18 @@ Pretraining and MP20 labels come from MatterSim; DFT post-training and DFT-test 
 come from DFT-PBE phonon calculations. Original frequencies are retained; regression
 target clipping is applied by the training loss rather than to the archived labels.
 
+## Fixed screening pools and scores
+
+The two 5% stable candidate pools used for the ROC/PR/recall figures are recorded in
+[screening_pools_20261105](screening_pools_20261105): 3,200 MP20 structures and
+500 DFT-PBE structures. Candidate CSVs include CIF IDs and paths, labels, raw
+model outputs, fixed scores, ranks and Top-1% screening flags. Separate CSVs list
+all reference-stable targets and the actual materials selected by each model.
+A smaller `cifs.zip` includes all 3,700 required structures.
+
+See [Screening reproduction](../docs/SCREENING_REPRODUCTION.md) to recompute the
+metrics and regenerate both figures directly from these frozen CSVs.
+
 ## Download verification
 
 SHA256 of the complete ZIP:
