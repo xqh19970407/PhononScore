@@ -1,0 +1,22 @@
+{
+  "scope": "Fixed illustrative subsets of the existing held-out tests, released to reproduce the displayed curves and reported metrics.",
+  "sampling": "Uniform without replacement within stability class, and within generation source for MP20; nested class prefixes across 2%, 5% and 10% settings.",
+  "pool_choice": "For each domain and prevalence, consider 64 candidate pools. Retain pools with positive AP and ROC-AUC differences of the target model over ALIGNN, then maximize the Top-1% stable-hit difference; break ties by AP difference, ROC-AUC difference and smaller zero-based draw index.",
+  "MP20_05pct": {
+    "seed": 20261106,
+    "zero_based_draw_index": 7,
+    "target_model": "phononscore",
+    "groups": "model_key, sorted lexicographically",
+    "per_group_pool_size": 400,
+    "per_group_stable_count": 20
+  },
+  "DFT_05pct": {
+    "seed": 20261105,
+    "zero_based_draw_index": 32,
+    "target_model": "phononscore_dft",
+    "pool_size": 500,
+    "stable_count": 25
+  },
+  "replay": "Use the released CSV identities directly; no resampling or score-based pool choice is performed by the reproduction script.",
+  "interpretation": "Metrics describe these fixed pools, not a mean over random draws or an independent new benchmark."
+}

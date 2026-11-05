@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "release_date": "2026-11-05",
+  "pools": [
+    {
+      "pool_id": "MP20_05pct",
+      "csv": "mp20_05pct.csv",
+      "n": 3200,
+      "stable_count": 160,
+      "primary_k": 32,
+      "reference_label": "MatterSim",
+      "ks": [
+        8,
+        16,
+        32,
+        64,
+        100,
+        160,
+        320,
+        800,
+        1600,
+        3200
+      ],
+      "figure_stem": "MP20_05pct_ROC_ZOOM_PR_RECALL"
+    },
+    {
+      "pool_id": "DFT_05pct",
+      "csv": "dft_05pct.csv",
+      "n": 500,
+      "stable_count": 25,
+      "primary_k": 5,
+      "reference_label": "DFT-PBE",
+      "ks": [
+        1,
+        5,
+        10,
+        25,
+        50,
+        100,
+        250,
+        500
+      ],
+      "figure_stem": "DFT_05pct_ROC_ZOOM_PR_RECALL"
+    }
+  ],
+  "methods": [
+    "phononscore",
+    "phononscore_dft",
+    "alignn"
+  ],
+  "stability_threshold_THz": -0.1,
+  "stability_rule": "min_frequency > -0.1 THz",
+  "ranking": "Descending score, ties resolved by ascending pool_index",
+  "score_normalization": "Checkpoint-specific fixed gradient-training moments",
+  "alpha": 0.2,
+  "beta": 0.5,
+  "scoring_config": "configs/fixed_scoring.json",
+  "scoring_config_sha256": "338c4176082aa85733a6f2b89d3afc7915d4ef00370e7913da98c3e804a57b46",
+  "checkpoint_sha256": {
+    "phononscore_pretrain": "79b027c7037184786d6913783d3d82b081aee16f4762612184767e5ca58c0b0f",
+    "phononscore_dft": "3c0a3b3d16cba54af82ea3dd1eea184a5b70042b05c71830685964e067956404"
+  },
+  "alignment_baseline": "Existing paper single-task ALIGNN cached predictions; no new DFT fine-tuning.",
+  "cif_archive": "cifs.zip",
+  "cif_count": 3700,
+  "files_sha256": {
+    "cifs.zip": "0c27c1f603011bfa81fbe74dd16bdab08df967d5364ae6e535564b7a25736aec",
+    "dft_05pct.csv": "35734ee8ef1f0039b73afdacfe0d01775136bf954175bb555c41e1291dee2d33",
+    "expected_metrics.csv": "7fa0eeb42e181e2452b5e12fcb64948048d5095bdb3d877dd183922b456c42f0",
+    "mp20_05pct.csv": "8681a54b748aea8e9813f10a1707154405eaba22273145ccb51c863cc27283aa",
+    "pool_construction.json": "57f48679a6ad726b4dc746baad8d4446ed25bbe2dc6751da9e864b39281193c2",
+    "selected_candidates.csv": "de611abd2bb7031fc090ebcb1c735350a534c4bf9a5557f05eb579405ad01156",
+    "stable_targets.csv": "4296ed6009b449378eda3dc2d4f23573e2f482ef2ce7bd0659499f37aa70bfc7"
+  }
+}
